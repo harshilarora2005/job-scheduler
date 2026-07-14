@@ -13,7 +13,6 @@ import java.time.Instant;
 public class Job {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "job_type", nullable = false)
@@ -23,35 +22,30 @@ public class Job {
     @Column(name = "payload", columnDefinition = "jsonb", nullable = false)
     private String payload;
 
-    @Column(nullable = false)
-    private String status = "PENDING";
+    private String status;
+    private Short priority;
 
-    private Short priority = 5;
-
-    @Column(name = "next_run_time", nullable = false)
-    private Instant nextRunTime = Instant.now();
-
-    @Column(name = "cron_expression")
-    private String cronExpression;
-
-    @Column(name = "is_recurring")
-    private Boolean isRecurring = false;
+    @Column(name = "next_run_time")
+    private Instant nextRunTime;
 
     @Column(name = "attempt_count")
-    private Integer attemptCount = 0;
+    private Integer attemptCount;
 
     @Column(name = "max_attempts")
-    private Integer maxAttempts = 5;
+    private Integer maxAttempts;
 
-    @Column(name = "idempotency_key", unique = true)
-    private String idempotencyKey;
+    @Column(name = "lease_owner")
+    private String leaseOwner;
 
-    @Column(name = "job_hash")
-    private String jobHash;
+    @Column(name = "lease_expires_at")
+    private Instant leaseExpiresAt;
 
-    @Column(name = "created_at")
-    private Instant createdAt = Instant.now();
+    @Column(name = "last_heartbeat_at")
+    private Instant lastHeartbeatAt;
+
+    @Column(name = "last_error")
+    private String lastError;
 
     @Column(name = "updated_at")
-    private Instant updatedAt = Instant.now();
+    private Instant updatedAt;
 }
