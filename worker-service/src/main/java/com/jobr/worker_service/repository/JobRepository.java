@@ -7,11 +7,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface JobRepository extends JpaRepository<Job, Long> {
-    
-    @Modifying
     @Transactional
     @Query(value = """
         WITH claimed AS (
@@ -34,7 +33,12 @@ public interface JobRepository extends JpaRepository<Job, Long> {
         WHERE jobs.id = claimed.id
         RETURNING jobs.id
         """, nativeQuery = true)
-    Optional<Long> claimNextJob(@Param("workerId") String workerId);
+    List<Long> claimNextJobRaw(@Param("workerId") String workerId);
+    
+    default Optional<Long> claimNextJob(String workerId) {
+        List<Long> result = claimNextJobRaw(workerId);
+        return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
+    }
 
     @Modifying
     @Transactional

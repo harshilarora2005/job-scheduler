@@ -1,0 +1,37 @@
+package com.jobr.worker_service.service;
+
+import com.jobr.worker_service.repository.JobRepository;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+import java.util.UUID;
+
+@Component
+public class JobWorker {
+
+    private final JobRepository jobRepository;
+    private final String workerId = "worker-" + UUID.randomUUID().toString().substring(0, 8);
+
+    public JobWorker(JobRepository jobRepository) {
+        this.jobRepository = jobRepository;
+    }
+
+    @Scheduled(fixedDelay = 2000)
+    public void poll() {
+        jobRepository.claimNextJob(workerId).ifPresent(jobId -> {
+            System.out.println("[" + workerId + "] claimed job " + jobId);
+            execute(jobId);
+        });
+    }
+
+    private void execute(Long jobId) {
+        try {
+            Thread.sleep(2000);
+            jobRepository.markSucceeded(jobId, workerId);
+            System.out.println("[" + workerId + "] completed job " + jobId);
+        } catch (Exception e) {
+            jobRepository.markFailed(jobId, workerId, e.getMessage());
+            System.out.println("[" + workerId + "] failed job " + jobId + ": " + e.getMessage());
+        }
+    }
+}
