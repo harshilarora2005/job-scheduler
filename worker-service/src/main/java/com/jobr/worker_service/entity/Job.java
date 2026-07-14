@@ -1,4 +1,4 @@
-package com.jobr.api_service.entity;
+package com.jobr.worker_service.entity;
 
 import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;

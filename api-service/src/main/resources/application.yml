@@ -4,6 +4,10 @@ spring:
     username: postgres
     password:
   jpa:
+    properties:
+      hibernate:
+        type:
+          json_format_mapper: jackson
     hibernate:
       ddl-auto: none
     open-in-view: false
