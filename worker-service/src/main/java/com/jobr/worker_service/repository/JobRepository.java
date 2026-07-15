@@ -34,7 +34,7 @@ public interface JobRepository extends JpaRepository<Job, Long> {
         RETURNING jobs.id
         """, nativeQuery = true)
     List<Long> claimNextJobRaw(@Param("workerId") String workerId);
-    
+
     default Optional<Long> claimNextJob(String workerId) {
         List<Long> result = claimNextJobRaw(workerId);
         return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));

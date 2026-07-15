@@ -26,7 +26,10 @@ public class JobWorker {
 
     private void execute(Long jobId) {
         try {
-            Thread.sleep(2000);
+            for (int i = 0; i < 2; i++) {
+                Thread.sleep(1000);
+                jobRepository.heartbeat(jobId, workerId); 
+            }
             jobRepository.markSucceeded(jobId, workerId);
             System.out.println("[" + workerId + "] completed job " + jobId);
         } catch (Exception e) {
