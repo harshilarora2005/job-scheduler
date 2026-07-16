@@ -11,6 +11,6 @@ public class RabbitConfig {
 
     @Bean
     public Queue jobReadyQueue() {
-        return new Queue(JOB_READY_QUEUE, true); 
+        return new Queue(JOB_READY_QUEUE, true);
     }
 }
