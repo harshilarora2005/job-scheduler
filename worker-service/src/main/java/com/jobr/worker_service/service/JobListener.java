@@ -15,8 +15,6 @@ public class JobListener {
 
     @RabbitListener(queues = RabbitConfig.JOB_READY_QUEUE)
     public void onJobReady(String jobIdMessage) {
-        // The message is just a nudge, not trusted directly.
-        // Try to claim immediately rather than waiting for the next poll.
         jobWorker.tryClaimAndExecute();
     }
 }
