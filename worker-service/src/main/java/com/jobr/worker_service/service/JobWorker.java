@@ -16,12 +16,9 @@ public class JobWorker {
         this.jobRepository = jobRepository;
     }
 
-    @Scheduled(fixedDelay = 2000)
+    @Scheduled(fixedDelay = 10000)
     public void poll() {
-        jobRepository.claimNextJob(workerId).ifPresent(jobId -> {
-            System.out.println("[" + workerId + "] claimed job " + jobId);
-            execute(jobId);
-        });
+        tryClaimAndExecute();
     }
 
     private void execute(Long jobId) {
@@ -36,5 +33,12 @@ public class JobWorker {
             jobRepository.markFailed(jobId, workerId, e.getMessage());
             System.out.println("[" + workerId + "] failed job " + jobId + ": " + e.getMessage());
         }
+    }
+
+    public void tryClaimAndExecute() {
+        jobRepository.claimNextJob(workerId).ifPresent(jobId -> {
+            System.out.println("[" + workerId + "] claimed job " + jobId);
+            execute(jobId);
+        });
     }
 }
