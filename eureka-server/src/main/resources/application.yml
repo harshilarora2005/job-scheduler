@@ -1,0 +1,15 @@
+server:
+  port: 8761
+
+spring:
+  application:
+    name: eureka-server
+
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+  server:
+    # dev-friendly: evict stale instances quickly instead of waiting the default 90s
+    eviction-interval-timer-in-ms: 5000
+    response-cache-update-interval-ms: 5000
