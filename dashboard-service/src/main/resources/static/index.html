@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>job-scheduler live dashboard</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+         background: #0e0e10; color: #e8e8ea; }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+  h1 { font-size: 20px; font-weight: 500; margin: 0 0 4px; }
+  .sub { color: #98979b; font-size: 13px; margin: 0 0 1.75rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+  .card { background: #17171a; border: 1px solid #2a2a2e; border-radius: 10px; padding: 14px 16px; }
+  .card .label { font-size: 12px; color: #98979b; margin: 0 0 6px; }
+  .card .value { font-size: 26px; font-weight: 600; margin: 0; }
+  .card .value.ok { color: #4ec98a; }
+  .card .value.warn { color: #e2a33d; }
+  .card .value.bad { color: #e25a5a; }
+  .panel { background: #17171a; border: 1px solid #2a2a2e; border-radius: 10px; padding: 16px 18px; margin-bottom: 1.5rem; }
+  .panel h2 { font-size: 14px; font-weight: 500; margin: 0 0 12px; color: #cfcfd2; }
+  canvas { max-width: 100%; }
+  .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  button { background: #232327; border: 1px solid #34343a; color: #e8e8ea; padding: 8px 14px;
+           border-radius: 8px; font-size: 13px; cursor: pointer; }
+  button:hover { background: #2a2a30; }
+  button:disabled { opacity: 0.5; cursor: default; }
+  input[type=number] { background: #0e0e10; border: 1px solid #34343a; color: #e8e8ea;
+                        border-radius: 6px; padding: 6px 8px; width: 70px; font-size: 13px; }
+  label { font-size: 12px; color: #98979b; }
+  .status { font-size: 12px; color: #98979b; margin-left: auto; }
+  .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; }
+  .dot.live { background: #4ec98a; }
+  .dot.down { background: #e25a5a; }
+  .bytype { display: flex; gap: 20px; flex-wrap: wrap; font-size: 13px; margin-top: 10px; color: #cfcfd2; }
+  .bytype span.n { color: #98979b; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div class="wrap" style="display:none" id="fallback">Loading dashboard…</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef, useCallback } = React;
+
+// Same-origin: this page is served BY dashboard-service, so /stats needs no CORS setup.
+const STATS_URL = "/stats";
+// Cross-origin: api-service runs on a different port, so it needs CorsConfig (see ApiCorsConfig.java).
+const API_BASE = "http://localhost:8080";
+const POLL_MS = 1500;
+const HISTORY_POINTS = 60; // ~90s of history at 1.5s polling
+
+const JOB_TYPES = ["EMAIL", "WEBHOOK", "REPORT_GENERATION"];
+
+function uuid() {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
+  });
+}
+
+function StatCard({ label, value, tone }) {
+  return (
+    <div className="card">
+      <p className="label">{label}</p>
+      <p className={"value" + (tone ? " " + tone : "")}>{value}</p>
+    </div>
+  );
+}
+
+function LineChart({ id, label, data, color, suffix }) {
+  const canvasRef = useRef(null);
+  const chartRef = useRef(null);
+
+  useEffect(() => {
+    chartRef.current = new Chart(canvasRef.current, {
+      type: "line",
+      data: {
+        labels: data.map((_, i) => i),
+        datasets: [{
+          data: data.map((d) => d.y),
+          borderColor: color,
+          backgroundColor: color + "22",
+          fill: true,
+          tension: 0.3,
+          borderWidth: 2,
+          pointRadius: 0,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { display: false },
+          y: {
+            beginAtZero: true,
+            grid: { color: "#2a2a2e" },
+            ticks: { color: "#98979b", callback: (v) => v + (suffix || "") },
+          },
+        },
+      },
+    });
+    return () => chartRef.current && chartRef.current.destroy();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!chartRef.current) return;
+    chartRef.current.data.labels = data.map((_, i) => i);
+    chartRef.current.data.datasets[0].data = data.map((d) => d.y);
+    chartRef.current.update("none");
+  }, [data]);
+
+  return (
+    <div style={{ position: "relative", height: 180 }}>
+      <canvas
+        id={id}
+        ref={canvasRef}
+        role="img"
+        aria-label={label + " over time"}
+      ></canvas>
+    </div>
+  );
+}
+
+function App() {
+  const [stats, setStats] = useState(null);
+  const [connected, setConnected] = useState(true);
+  const [throughputHistory, setThroughputHistory] = useState([]);
+  const [latencyHistory, setLatencyHistory] = useState([]);
+  const prevSucceeded = useRef(0);
+  const prevTime = useRef(Date.now());
+
+  const [firing, setFiring] = useState(false);
+  const [fireCount, setFireCount] = useState(0);
+  const [fireTotal, setFireTotal] = useState(100);
+  const [fireConcurrency, setFireConcurrency] = useState(10);
+
+  const poll = useCallback(async () => {
+    try {
+      const res = await fetch(STATS_URL);
+      if (!res.ok) throw new Error("bad status");
+      const json = await res.json();
+      setConnected(true);
+
+      const now = Date.now();
+      const dtSec = (now - prevTime.current) / 1000;
+      const deltaSucceeded = json.succeeded - prevSucceeded.current;
+      const instThroughput = dtSec > 0 ? Math.max(0, deltaSucceeded / dtSec) : 0;
+      prevSucceeded.current = json.succeeded;
+      prevTime.current = now;
+
+      setStats(json);
+      setThroughputHistory((h) => [...h.slice(-(HISTORY_POINTS - 1)), { y: Number(instThroughput.toFixed(2)) }]);
+      setLatencyHistory((h) => [...h.slice(-(HISTORY_POINTS - 1)), { y: json.avgCompletionMillis ? Number((json.avgCompletionMillis / 1000).toFixed(1)) : 0 }]);
+    } catch (e) {
+      setConnected(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    poll();
+    const id = setInterval(poll, POLL_MS);
+    return () => clearInterval(id);
+  }, [poll]);
+
+  async function fireLoadTest() {
+    setFiring(true);
+    setFireCount(0);
+    const total = fireTotal;
+    const concurrency = fireConcurrency;
+    let sent = 0;
+
+    async function worker() {
+      while (sent < total) {
+        sent += 1;
+        const jobType = JOB_TYPES[Math.floor(Math.random() * JOB_TYPES.length)];
+        try {
+          await fetch(`${API_BASE}/jobs`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              jobType,
+              payload: { generatedBy: "dashboard-live-test", at: new Date().toISOString() },
+              priority: 5,
+              idempotencyKey: uuid(),
+            }),
+          });
+        } catch (e) {
+          // surfaced implicitly via connected/failed count on next poll's dispatched delta
+        }
+        setFireCount((c) => c + 1);
+      }
+    }
+
+    await Promise.all(Array.from({ length: concurrency }, worker));
+    setFiring(false);
+  }
+
+  const s = stats || {
+    dispatched: 0, running: 0, succeeded: 0, failed: 0, dead: 0,
+    succeededByType: {}, avgCompletionMillis: null,
+  };
+  const inFlight = Math.max(0, s.dispatched - s.succeeded - s.failed - s.dead);
+  const avgLatencySec = s.avgCompletionMillis ? (s.avgCompletionMillis / 1000).toFixed(1) : "—";
+  const currentThroughput = throughputHistory.length ? throughputHistory[throughputHistory.length - 1].y : 0;
+
+  return (
+    <div className="wrap">
+      <h1>job-scheduler — live dashboard</h1>
+      <p className="sub">
+        Polling dashboard-service every {POLL_MS / 1000}s. Backed entirely by the job.events Kafka stream, not direct DB queries.
+      </p>
+
+      <div className="grid">
+        <StatCard label="dispatched" value={s.dispatched} />
+        <StatCard label="in flight" value={inFlight} tone={inFlight > 0 ? "warn" : undefined} />
+        <StatCard label="succeeded" value={s.succeeded} tone="ok" />
+        <StatCard label="failed / dead" value={`${s.failed} / ${s.dead}`} tone={(s.failed + s.dead) > 0 ? "bad" : undefined} />
+        <StatCard label="avg completion" value={avgLatencySec === "—" ? "—" : `${avgLatencySec}s`} />
+        <StatCard label="current throughput" value={`${currentThroughput.toFixed(1)}/s`} />
+      </div>
+
+      <div className="panel">
+        <h2>completion throughput (jobs/sec, instantaneous)</h2>
+        <LineChart id="tp" label="Throughput" data={throughputHistory} color="#2a78d6" suffix="/s" />
+      </div>
+
+      <div className="panel">
+        <h2>avg completion latency (cumulative, seconds)</h2>
+        <LineChart id="lat" label="Latency" data={latencyHistory} color="#eb6834" suffix="s" />
+      </div>
+
+      <div className="panel">
+        <h2>run a test burst</h2>
+        <div className="controls">
+          <label>
+            jobs&nbsp;
+            <input type="number" min="1" max="5000" value={fireTotal}
+                   onChange={(e) => setFireTotal(Number(e.target.value) || 1)} disabled={firing} />
+          </label>
+          <label>
+            concurrency&nbsp;
+            <input type="number" min="1" max="100" value={fireConcurrency}
+                   onChange={(e) => setFireConcurrency(Number(e.target.value) || 1)} disabled={firing} />
+          </label>
+          <button onClick={fireLoadTest} disabled={firing}>
+            {firing ? `sending ${fireCount}/${fireTotal}…` : "fire test load →"}
+          </button>
+          <span className="status">
+            <span className={"dot " + (connected ? "live" : "down")}></span>
+            {connected ? "connected" : "dashboard-service unreachable"}
+          </span>
+        </div>
+        {Object.keys(s.succeededByType || {}).length > 0 && (
+          <div className="bytype">
+            {Object.entries(s.succeededByType).map(([type, count]) => (
+              <span key={type}>{type} <span className="n">{count}</span></span>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
