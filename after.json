@@ -1,0 +1,5 @@
+{"dispatched":430,"running":430,"succeeded":430,"failed":0,"dead":0,"succeededByType":{"WEBHOOK":141,"REPORT_GENERATION":152,"EMAIL":137},"failedByType":{},"avgCompletionMillis":99973.87441860465}
+
+{"dispatched":880,"running":880,"succeeded":880,"failed":0,"dead":0,"succeededByType":{"WEBHOOK":294,"REPORT_GENERATION":297,"EMAIL":289},"failedByType":{},"avgCompletionMillis":65602.78181818181}
+
+{"dispatched":1350,"running":1350,"succeeded":1350,"failed":0,"dead":0,"succeededByType":{"WEBHOOK":446,"REPORT_GENERATION":450,"EMAIL":454},"failedByType":{},"avgCompletionMillis":49405.538518518515}

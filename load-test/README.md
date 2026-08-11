@@ -35,7 +35,9 @@ k6 run load-test/job-load-test.js
 # heavier / longer run
 k6 run --env VUS=30 --env DURATION=60s load-test/job-load-test.js
 ```
-
+```bash
+k6 run --env VUS=5 --env DURATION=10s load-test/job-load-test.js
+```
 ## Methodology: capturing real before/after numbers
 
 1. **Snapshot `/stats` before the run**: `curl localhost:8083/stats > before.json`

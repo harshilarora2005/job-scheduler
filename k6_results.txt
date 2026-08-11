@@ -1,0 +1,180 @@
+k6 run --env VUS=5 --env DURATION=10s load-test/job-load-test.js
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: load-test/job-load-test.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 5 max VUs, 40s max duration (incl. graceful stop):
+              * submit_jobs: 5 looping VUs for 10s (gracefulStop: 30s)
+
+
+
+  █ THRESHOLDS 
+
+    http_req_failed
+    ✓ 'rate<0.01' rate=0.00%
+
+    job_submit_latency_ms
+    ✓ 'p(95)<500' p(95)=20.392
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 430     42.595618/s
+    checks_succeeded...: 100.00% 430 out of 430
+    checks_failed......: 0.00%   0 out of 430
+
+    ✓ status is 200 or 201
+
+    CUSTOM
+    job_submit_latency_ms..........: avg=16.126421 min=3.111    med=11.2895  max=478.928  p(90)=15.8098  p(95)=20.392  
+
+    HTTP
+    http_req_duration..............: avg=16.12ms   min=3.11ms   med=11.28ms  max=478.92ms p(90)=15.8ms   p(95)=20.39ms 
+      { expected_response:true }...: avg=16.12ms   min=3.11ms   med=11.28ms  max=478.92ms p(90)=15.8ms   p(95)=20.39ms 
+    http_req_failed................: 0.00%  0 out of 430
+    http_reqs......................: 430    42.595618/s
+
+    EXECUTION
+    iteration_duration.............: avg=117.33ms  min=103.78ms med=112.59ms max=584.52ms p(90)=116.88ms p(95)=121.59ms
+    iterations.....................: 430    42.595618/s
+    vus............................: 5      min=5        max=5
+    vus_max........................: 5      min=5        max=5
+
+    NETWORK
+    data_received..................: 236 kB 23 kB/s
+    data_sent......................: 126 kB 13 kB/s
+
+
+
+
+running (10.1s), 0/5 VUs, 430 complete and 0 interrupted iterations
+submit_jobs ✓ [======================================] 5 VUs  10s
+
+ k6 run --env VUS=5 --env DURATION=10s load-test/job-load-test.js
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: load-test/job-load-test.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 5 max VUs, 40s max duration (incl. graceful stop):
+              * submit_jobs: 5 looping VUs for 10s (gracefulStop: 30s)
+
+
+
+  █ THRESHOLDS 
+
+    http_req_failed
+    ✓ 'rate<0.01' rate=0.00%
+
+    job_submit_latency_ms
+    ✓ 'p(95)<500' p(95)=19.15135
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 450     44.932659/s
+    checks_succeeded...: 100.00% 450 out of 450
+    checks_failed......: 0.00%   0 out of 450
+
+    ✓ status is 200 or 201
+
+    CUSTOM
+    job_submit_latency_ms..........: avg=10.031429 min=2.298    med=9.2115   max=57.618   p(90)=12.8852  p(95)=19.15135
+
+    HTTP
+    http_req_duration..............: avg=10.03ms   min=2.29ms   med=9.21ms   max=57.61ms  p(90)=12.88ms  p(95)=19.15ms 
+      { expected_response:true }...: avg=10.03ms   min=2.29ms   med=9.21ms   max=57.61ms  p(90)=12.88ms  p(95)=19.15ms 
+    http_req_failed................: 0.00%  0 out of 450
+    http_reqs......................: 450    44.932659/s
+
+    EXECUTION
+    iteration_duration.............: avg=111.24ms  min=102.61ms med=110.42ms max=163.57ms p(90)=113.97ms p(95)=119.64ms
+    iterations.....................: 450    44.932659/s
+    vus............................: 5      min=5        max=5
+    vus_max........................: 5      min=5        max=5
+
+    NETWORK
+    data_received..................: 246 kB 25 kB/s
+    data_sent......................: 132 kB 13 kB/s
+
+
+
+
+running (10.0s), 0/5 VUs, 450 complete and 0 interrupted iterations
+submit_jobs ✓ [======================================] 5 VUs  10s
+➜  job-scheduler git:(main) ✗ 
+
+k6 run --env VUS=5 --env DURATION=10s load-test/job-load-test.js
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: load-test/job-load-test.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 5 max VUs, 40s max duration (incl. graceful stop):
+              * submit_jobs: 5 looping VUs for 10s (gracefulStop: 30s)
+
+
+
+  █ THRESHOLDS 
+
+    http_req_failed
+    ✓ 'rate<0.01' rate=0.00%
+
+    job_submit_latency_ms
+    ✓ 'p(95)<500' p(95)=16.48105
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 470     46.541556/s
+    checks_succeeded...: 100.00% 470 out of 470
+    checks_failed......: 0.00%   0 out of 470
+
+    ✓ status is 200 or 201
+
+    CUSTOM
+    job_submit_latency_ms..........: avg=6.109506 min=1.033    med=5.2795   max=44.036   p(90)=8.0709   p(95)=16.48105
+
+    HTTP
+    http_req_duration..............: avg=6.1ms    min=1.03ms   med=5.27ms   max=44.03ms  p(90)=8.07ms   p(95)=16.48ms 
+      { expected_response:true }...: avg=6.1ms    min=1.03ms   med=5.27ms   max=44.03ms  p(90)=8.07ms   p(95)=16.48ms 
+    http_req_failed................: 0.00%  0 out of 470
+    http_reqs......................: 470    46.541556/s
+
+    EXECUTION
+    iteration_duration.............: avg=107.38ms min=101.73ms med=106.61ms max=148.16ms p(90)=109.52ms p(95)=117.86ms
+    iterations.....................: 470    46.541556/s
+    vus............................: 5      min=5        max=5
+    vus_max........................: 5      min=5        max=5
+
+    NETWORK
+    data_received..................: 258 kB 26 kB/s
+    data_sent......................: 138 kB 14 kB/s
+
+
+
+
+running (10.1s), 0/5 VUs, 470 complete and 0 interrupted iterations
+submit_jobs ✓ [======================================] 5 VUs  10s

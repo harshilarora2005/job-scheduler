@@ -13,7 +13,7 @@ public class JobListener {
         this.jobWorker = jobWorker;
     }
 
-    @RabbitListener(queues = RabbitConfig.JOB_READY_QUEUE)
+    @RabbitListener(queues = RabbitConfig.JOB_READY_QUEUE, concurrency = "${worker.rabbit.concurrency:4}")
     public void onJobReady(String jobIdMessage) {
         jobWorker.tryClaimAndExecute();
     }
