@@ -2,8 +2,7 @@
 
 A distributed job scheduling system built with Spring Boot, demonstrating horizontal scaling, event-driven architecture, and real-time observability. Jobs are dispatched via RabbitMQ, safely claimed across concurrent workers using PostgreSQL row-level locking, and tracked end-to-end through a Kafka event stream that feeds a live analytics dashboard.
 
-<!-- Add a high-level architecture diagram here -->
-<!-- ![Architecture](docs/images/architecture.png) -->
+![Architecture](docs/images/architecture.svg)
 
 ## Why this exists
 
@@ -19,8 +18,7 @@ The system is split into four independently deployable Spring Boot services, plu
 - **worker-service** — claims jobs using `SELECT ... FOR UPDATE SKIP LOCKED`, so multiple concurrent threads across multiple worker instances can pull from the same queue without double-processing a job. Executes the job, heartbeats while running, and marks it succeeded, failed (with exponential backoff retry), or dead-lettered after max attempts.
 - **dashboard-service** — consumes a Kafka event stream (`job.events`) published by scheduler-service and worker-service on every state transition, and builds real-time statistics entirely from that stream rather than querying PostgreSQL. Serves both a JSON `/stats` endpoint and a live-updating dashboard UI.
 
-<!-- Add a service diagram or sequence diagram here -->
-<!-- ![Service flow](docs/images/service-flow.png) -->
+![Job lifecycle](docs/images/service-flow.svg)
 
 ### Why two message systems
 
@@ -48,15 +46,14 @@ Worker instances register with Eureka and can be scaled horizontally — no hard
 
 Throughput scales near-linearly with worker count. Full methodology, including how to reproduce these numbers, is documented in [`load-test/README.md`](load-test/README.md).
 
-<!-- Add throughput/latency chart screenshots here -->
-<!-- ![Load test results](docs/images/load-test-results.png) -->
+![Load test results](docs/images/stats.png)
 
 ## Live dashboard
 
 `dashboard-service` serves a live-updating dashboard (React, no build step required) showing real-time job counts, completion throughput, and latency, sourced entirely from the Kafka event stream. It also includes a built-in control to fire a test load of jobs directly from the browser.
 
-<!-- Add a dashboard screenshot or short GIF here -->
-<!-- ![Live dashboard](docs/images/dashboard.png) -->
+
+![Live dashboard](docs/images/website.gif)
 
 Once the stack is running, open `http://localhost:8083`.
 
