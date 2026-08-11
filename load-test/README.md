@@ -9,9 +9,15 @@ Two things get measured, and they're not the same number:
   is fed entirely by the `job.events` Kafka stream (see main README / architecture notes).
 
 The interesting story is the *gap* between these two: if submission outpaces completion,
-jobs pile up as `PENDING` and never get worked. Scaling worker instances (registered via
-Eureka, no manual port wiring needed) is what should close that gap — that's the number to
-capture for the resume.
+jobs pile up as `PENDING` and never get worked. Two independent levers close that gap:
+
+- **Horizontal**: more worker-service instances (registered via Eureka, no manual port wiring)
+- **Vertical**: `worker.rabbit.concurrency` (default 4) - how many jobs a single worker
+  instance processes in parallel, since each job execution blocks for ~2s and the Rabbit
+  listener previously ran single-threaded by default
+
+Both are worth capturing separately for the resume - "scaled worker instances" and "tuned
+per-instance concurrency" are two different, both legitimate, engineering levers.
 
 ## Prerequisites
 
@@ -43,8 +49,11 @@ k6 run --env VUS=30 --env DURATION=60s load-test/job-load-test.js
    directly.
 7. Repeat steps 2-6 with 3 workers, then 5 workers (just run `./mvnw spring-boot:run` in
    worker-service again in new terminals — each grabs a random port and registers itself
-   separately in Eureka; confirm the count at `http://localhost:8761`).
-8. Compare completion throughput and `avgCompletionMillis` across 1 / 3 / 5 workers.
+   separately in Eureka; confirm the count at `http://localhost:8761`). To test concurrency
+   instead of/alongside instance count, override the per-instance thread count:
+   `java -jar worker-service.jar --worker.rabbit.concurrency=8`.
+8. Compare completion throughput and `avgCompletionMillis` across the combinations you ran
+   (e.g. 1 worker × concurrency 4, 1 worker × concurrency 8, 3 workers × concurrency 4).
 
 That comparison — sustained jobs/sec and p95-equivalent completion latency at each worker
 count — is the concrete, non-invented metric this project was missing on the resume.
