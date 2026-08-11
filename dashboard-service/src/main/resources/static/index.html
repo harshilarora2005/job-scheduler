@@ -34,6 +34,7 @@
   .dot.down { background: #e25a5a; }
   .bytype { display: flex; gap: 20px; flex-wrap: wrap; font-size: 13px; margin-top: 10px; color: #cfcfd2; }
   .bytype span.n { color: #98979b; }
+  .fire-error { color: #e25a5a; font-size: 12px; margin: 10px 0 0; }
 </style>
 </head>
 <body>
@@ -142,6 +143,7 @@ function App() {
   const [fireCount, setFireCount] = useState(0);
   const [fireTotal, setFireTotal] = useState(100);
   const [fireConcurrency, setFireConcurrency] = useState(10);
+  const [fireError, setFireError] = useState(null);
 
   const poll = useCallback(async () => {
     try {
@@ -177,13 +179,14 @@ function App() {
     const total = fireTotal;
     const concurrency = fireConcurrency;
     let sent = 0;
+    let errored = false;
 
     async function worker() {
       while (sent < total) {
         sent += 1;
         const jobType = JOB_TYPES[Math.floor(Math.random() * JOB_TYPES.length)];
         try {
-          await fetch(`${API_BASE}/jobs`, {
+          const res = await fetch(`${API_BASE}/jobs`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -193,8 +196,20 @@ function App() {
               idempotencyKey: uuid(),
             }),
           });
+          if (!res.ok) {
+            const body = await res.text().catch(() => "");
+            console.error("job submit failed", res.status, body);
+            setFireError(`api-service returned ${res.status}${body ? ": " + body : ""}`);
+            errored = true;
+          }
         } catch (e) {
-          // surfaced implicitly via connected/failed count on next poll's dispatched delta
+          // fetch() itself throws on network failure / CORS block (not on HTTP error status)
+          console.error("job submit request failed", e);
+          setFireError(
+            `Could not reach api-service at ${API_BASE} (${e.message}). ` +
+            `Check: is api-service running, and does it have the CORS patch applied?`
+          );
+          errored = true;
         }
         setFireCount((c) => c + 1);
       }
@@ -202,6 +217,7 @@ function App() {
 
     await Promise.all(Array.from({ length: concurrency }, worker));
     setFiring(false);
+    if (!errored) setFireError(null);
   }
 
   const s = stats || {
@@ -259,6 +275,7 @@ function App() {
             {connected ? "connected" : "dashboard-service unreachable"}
           </span>
         </div>
+        {fireError && <p className="fire-error">{fireError}</p>}
         {Object.keys(s.succeededByType || {}).length > 0 && (
           <div className="bytype">
             {Object.entries(s.succeededByType).map(([type, count]) => (
