@@ -3,9 +3,6 @@ import { check, sleep } from 'k6';
 import { Trend, Counter } from 'k6/metrics';
 import { uuidv4 } from 'https://jslib.k6.io/k6-utils/1.4.0/index.js';
 
-// Custom metrics on top of k6's built-in http_req_duration:
-// - job submission latency (POST /jobs response time - api-service's own responsiveness)
-// - a counter of accepted vs rejected submissions
 const submitLatency = new Trend('job_submit_latency_ms');
 const submitFailures = new Counter('job_submit_failures');
 

@@ -37,8 +37,6 @@ public class JobWorker {
             System.out.println("[" + workerId + "] completed job " + jobId);
         } catch (Exception e) {
             jobRepository.markFailed(jobId, workerId, e.getMessage());
-            // markFailed sets status to DEAD (max attempts hit) or PENDING (will retry) -
-            // re-read so the event reflects which one actually happened.
             String finalStatus = jobRepository.findById(jobId)
                     .map(Job::getStatus)
                     .orElse("FAILED");
