@@ -1,19 +1,23 @@
 spring:
   application:
     name: worker-service
+
   datasource:
     url: jdbc:postgresql://localhost:5432/scheduler
     username: postgres
     password:
+
   jpa:
     hibernate:
       ddl-auto: none
     open-in-view: false
+
   rabbitmq:
     host: localhost
     port: 5672
     username: guest
     password: guest
+
   kafka:
     bootstrap-servers: localhost:9092
     producer:
@@ -23,6 +27,11 @@ spring:
 server:
   # 0 = pick a random free port; lets us run N worker instances on one machine
   port: 0
+
+worker:
+  rabbit:
+    concurrency: 4
+
 eureka:
   client:
     service-url:
